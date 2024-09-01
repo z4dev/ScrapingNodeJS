@@ -2,6 +2,20 @@
 
 <div class="row">
   
+<!-- Loading Indicator (Initially Hidden) -->
+<div id="loadingIndicator" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background-color:white; padding:10px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.5);">
+  <i class="fa fa-spinner fa-spin"></i> النشر إلى تيليجرام....
+</div>
+
+<!-- Success Alert -->
+<div id="successAlert" style="display:none; position:fixed; top:20px; left:20px; z-index:9999; background-color:#28a745; color:white; padding:15px 20px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.3);">
+  <i class="fa fa-check-circle"></i> <span id="successMessage">تم النشر إلى تيليجرام بنجاح!</span>
+</div>
+
+
+
+
+
   <div class="col-lg-12">
     <div class="panel panel-default">
       <div class="panel-heading">جميع المصادر المتاحة</div>
@@ -25,13 +39,41 @@
                   <td><%= item.news_date %></td>
                   <td><%= item.source_name %></td>
                   <td>
-                      <a href="#" class="share-telegram" data-id="<%= item.news_id %>">
-                          <% if (parseInt(item.is_published) === 1) { %>
-                              <i class="fa fa-check"></i> <!-- Show checkmark if published -->
-                          <% } else { %>
-                              <i class="fa fa-share"></i> <!-- Show share icon if not published -->
-                          <% } %>
-                      </a>
+                    <a
+                    href="#"
+                    role="button"
+                    title="صورة الخبر"
+                    data-toggle="modal"
+                    data-target="#myModal"
+                    data-image-url="<%= item.news_image %>"
+                    ><i class="fa fa-image fa-fw"></i
+                  ></a>
+                  <a
+                    href="<%= item.news_url %>"
+                    target="_blank"
+                    title="رابط الخبر"
+                    ><i class="fa fa-link fa-fw"></i
+                  >
+                
+                </a>
+                     
+
+                <% if (parseInt(item.is_published) === 1) { %>
+                  <i class="fa fa-check" .disabled-checkmark ></i> <!-- Show checkmark if published -->
+        
+              <% } else { %>
+                  <a href="#" class="share-telegram" data-id="<%= item.news_id %>">
+                      <i class="fa fa-share"></i> <!-- Show share icon as a link -->
+                  </a>
+              <% } %>
+              
+
+
+
+
+                
+                
+                   
                   </td>
               </tr>
               <% }); %>
@@ -39,41 +81,81 @@
       </table>
       
       <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+
       <script>
-      $(document).ready(function() {
-          $.ajaxSetup({
-              headers: {
-                  'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-              }
-          });
-      
-          $('.share-telegram').on('click', function(event) {
-              event.preventDefault();
-              
-              const newsId = $(this).data('id');
-              const $icon = $(this).find('i');
-      
-              $.ajax({
-                  url: `/share/telegram/${newsId}`,
-                  type: 'POST',
-                  success: function(response) {
-                      if (response.success) {
-                          // Update the icon to a checkmark
-                          $icon.removeClass('fa-share').addClass('fa-check');
-                          alert('Post shared to Telegram successfully!');
-                      } else {
-                          alert(response.message || 'Failed to post to Telegram.');
-                      }
-                  },
-                  error: function(xhr, status, error) {
-                      console.error('AJAX Error:', status, error);
-                      alert('An error occurred. Please try again later.');
-                  }
-              });
-          });
-      });
+   
+   $(document).ready(function() {
+    // Set up AJAX with CSRF token for security
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
+    // Handle the click event on the share button
+    $('.share-telegram').on('click', function(event) {
+        event.preventDefault();
+        
+        const newsId = $(this).data('id'); // Get the news ID from data-id attribute
+        const $icon = $(this).find('i'); // Find the icon within the clicked element
+        const $this = $(this); // Store the clicked element for later use
+
+        // Show the loading indicator
+        $('#loadingIndicator').show();
+
+        // Make an AJAX POST request to share the news
+        $.ajax({
+            url: `/share/telegram/${newsId}`,
+            type: 'POST',
+            success: function(response) {
+                // Hide the loading indicator
+                $('#loadingIndicator').hide();
+
+                if (response.success) {
+                    // Update the icon to a checkmark and disable the link
+                    $icon.removeClass('fa-share').addClass('fa-check');
+                    $this.off('click'); // Remove the click event to prevent further clicks
+                    $this.addClass('disabled-checkmark'); // Add class to change the color
+
+                    // Show the success alert
+                    showSuccessAlert('تم النشر إلى تيليجرام بنجاح!');
+                } else {
+                    alert(response.message || 'Failed to post to Telegram.');
+                }
+            },
+            error: function(xhr, status, error) {
+                // Hide the loading indicator
+                $('#loadingIndicator').hide();
+
+                console.error('AJAX Error:', status, error);
+                alert('An error occurred. Please try again later.');
+            }
+        });
+    });
+});
+
+function showSuccessAlert(message) {
+    const alertBox = document.getElementById('successAlert');
+    alertBox.querySelector('#successMessage').textContent = message;
+    alertBox.style.display = 'block';
+
+    // Automatically hide the alert after 3 seconds
+    setTimeout(() => {
+        alertBox.style.display = 'none';
+    }, 3000);
+}
+
+
       </script>
       
+      <style>
+        .disabled-checkmark{
+          pointer-events: none;
+          cursor:auto;
+        }
+      </style>
       
         <div class="row">
           <div class="col-sm-6"></div>

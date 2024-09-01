@@ -10,8 +10,9 @@ import expressLayouts from 'express-ejs-layouts';
 import bodyParser from 'body-parser';
 import loginRoutes from './routes/login.js';
 import cpanelRoutes from './routes/cpanel.js';
+import isAuthenticated from './middleware/auth.js';
 
-const app = express();
+const app = express(); // Initialize the Express application
 const port = 3000;
 
 // Get __dirname
@@ -43,7 +44,7 @@ app.use(session({
 app.use(csurf({ cookie: true }));
 
 app.use(cors({
-  origin: 'http://localhost:3000', //'https://localhost:80',
+  origin: 'http://localhost:3000', // Adjust this based on your environment
   credentials: true,
 }));
 
@@ -55,14 +56,6 @@ app.use((req, res, next) => {
 app.get('/api/csrf-token', (req, res) => {
   res.json({ csrfToken: req.csrfToken() });
 });
-
-// Middleware to check if user is logged in
-const isAuthenticated = (req, res, next) => {return next();
-  if (req.session.user) {
-    return next();
-  }
-  res.redirect('/');
-};
 
 // Routes
 app.use('/', loginRoutes); 
