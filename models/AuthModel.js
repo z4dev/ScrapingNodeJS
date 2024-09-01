@@ -1,22 +1,22 @@
-import mysql from 'mysql2/promise';
-import dbConfig from '../config/dbConfig.js';
+import pool from '../config/dbConfig.js';
 
-// Define the User model
 class AuthModel {
     static async getUser(username = null) {
-      const connection = await mysql.createConnection(dbConfig.newsTechDBConfig);
-      try {
-        const [rows, fields] = await connection.execute('SELECT * FROM users where username = ?', [username]);
-        if (rows.length > 0) {
-            return rows[0];
-        } else {
-            return null;
+        let connection;
+        try {
+            connection = await pool.getConnection();  // Get a connection from the pool
+            const [rows] = await connection.query('SELECT * FROM users WHERE username = ?', [username]);
+            if (rows.length > 0) {
+                return rows[0];
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error executing query:', error);
+        } finally {
+            if (connection) connection.release();  // Release the connection back to the pool
         }
-      } catch (error) {
-        console.error('Error executing query:', error);
-      } finally {
-        await connection.end();  // Ensure connection is closed
-      }
-  }
+    }
 }
+
 export default AuthModel;

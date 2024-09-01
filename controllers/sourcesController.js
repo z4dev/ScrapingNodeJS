@@ -1,4 +1,5 @@
 import sourcesModel from '../models/SourcesModel.js';
+import scrapeAndInsert from '../utils/scrapData.js';
 
 const sourcesController = {
 
@@ -11,6 +12,14 @@ const sourcesController = {
             sources: sources
         });
     },
+
+    async sources_scrap(req, res) {
+       const data = await scrapeAndInsert();
+  
+
+    return res.json(data);   
+    
+    }
 };
 
 export default sourcesController;

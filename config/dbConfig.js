@@ -1,12 +1,14 @@
-import { config } from 'dotenv';
+import mysql from 'mysql2/promise';
 
-config();
+// Create a MySQL pool
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'news',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-const newsTechDBConfig = {
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-};
-
-export default {newsTechDBConfig};
+export default pool;

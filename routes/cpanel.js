@@ -9,6 +9,7 @@ import newsController from '../controllers/newsController.js';
 // Home routes
 router.get('/home', homeController.home_get);
 router.get('/sources', sourcesController.sources_get);
+router.get('/sources/scrap', sourcesController.sources_scrap);
 router.get('/news', newsController.news_get);
 
 export default router;
