@@ -42,28 +42,36 @@ const updateNewsToPublished = (id) => {
   });
 };
 
-// Function to send the post to the Telegram channel
+
+
 export default async (id) => {
     try {
         // Fetch the news by ID
         const news = await fetchNewsById(id);
         if (!news) {
-        throw new Error(`News with ID ${id} not found.`);
+            throw new Error(`News with ID ${id} not found.`);
         }
-    
+
         // Initialize the Telegram bot
         const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
-    
-        // Send the post to the Telegram channel
-        const message = `
-        *${news.title}*
-        ${news.date}
-        ![Image](${news.image})
-        Read more: ${news.url}
-        `;
-        await bot.telegram.sendMessage(TELEGRAM_CHANNEL_ID, message, { parse_mode: 'Markdown' });
+
+        // Send the image to the Telegram channel
+        if (news.image) {
+            await bot.telegram.sendPhoto(TELEGRAM_CHANNEL_ID, news.image, {
+                caption: `*${news.title}*\n${news.date}\n[Read more](${news.url})`,
+                parse_mode: 'Markdown',
+            });
+        } else {
+            // If there's no image, send just the message
+            const message = `
+            *${news.title}*
+            ${news.date}
+            Read more: ${news.url}
+            `;
+            await bot.telegram.sendMessage(TELEGRAM_CHANNEL_ID, message, { parse_mode: 'Markdown' });
+        }
+
         await updateNewsToPublished(id);
-        console.log("message", message);
         console.log(`Post with ID ${id} sent to Telegram.`);
         
         return true;
