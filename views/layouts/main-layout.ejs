@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ar">
+  <%- include('../partials/head.ejs') %>
+  <body>
+    <div id="wrapper">
+      <%- include('../partials/nav.ejs') %>
+      <div id="page-wrapper">
+        <div class="row">
+          <div class="col-lg-12">
+            <h1 class="page-header"><%=title%></h1>
+          </div>
+          <%- body %>
+        </div>
+      </div>
+    </div>
+    <%- include('../partials/scripts.ejs') %>
+  </body>
+</html>
