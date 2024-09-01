@@ -11,5 +11,6 @@ router.get('/home', homeController.home_get);
 router.get('/sources', sourcesController.sources_get);
 router.get('/sources/scrap', sourcesController.sources_scrap);
 router.get('/news', newsController.news_get);
+router.post('/share/telegram/:id', newsController.share_telegram);
 
 export default router;

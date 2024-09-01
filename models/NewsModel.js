@@ -20,6 +20,7 @@ class NewsModel {
                     'url': 'news_url',
                     'source_id': 'source_id',
                     'name': 'source_name',
+                    'is_published': 'is_published'  // Ensure this is mapped correctly
                 };
                 news = rows.map(row => {
                     const mappedRow = {};

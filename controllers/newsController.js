@@ -1,4 +1,5 @@
 import newsModel from '../models/NewsModel.js';
+import sendPostToTelegram from '../utils/sendPostToTelegram.js';
 
 const newsController = {
 
@@ -13,9 +14,24 @@ const newsController = {
             title: 'الأخبار',
             news: news,
             currentPage: page,
-            totalPages: totalPages
+            totalPages: totalPages,
+            is_published : news.is_published
+
         });
     },
+
+    async share_telegram(req, res) {
+        const { id } = req.params;
+        const posted = await sendPostToTelegram(id);
+        if (posted) 
+          return res.json({ success: true });
+        else
+        return res.json({ success: false, message: 'Failed to post to Telegram' });
+
+        
+     
+      
+    }
 };
 
 export default newsController;
