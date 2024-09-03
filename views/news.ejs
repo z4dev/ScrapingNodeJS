@@ -32,6 +32,7 @@
               </tr>
           </thead>
           <tbody>
+            <!-- if no data , button scrap news  -->
               <% news.forEach(item => { %>
               <tr class="odd gradeX" id="news-row-<%= item.news_id %>">
                   <td><%= item.news_id %></td>
@@ -66,6 +67,8 @@
                       <i class="fa fa-share"></i> <!-- Show share icon as a link -->
                   </a>
               <% } %>
+
+              
               
 
 
@@ -244,3 +247,11 @@ function showSuccessAlert(message) {
     </div>
   </div>
 </div>
+
+
+
+
+<!-- ajax error in post telegram -->
+<!-- session issues -->
+<!-- add many sources -->
+<!-- button to scrap the news -->
