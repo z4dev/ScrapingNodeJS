@@ -1,24 +1,36 @@
-<meta name="csrf-token" content="<%= csrfToken %>">
-
+<head>
+  <meta name="csrf-token" content="<%= csrfToken %>">
+</head>
 <div class="row">
-  
-<!-- Loading Indicator (Initially Hidden) -->
-<div id="loadingIndicator" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background-color:white; padding:10px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.5);">
-  <i class="fa fa-spinner fa-spin"></i> النشر إلى تيليجرام....
-</div>
 
-<!-- Success Alert -->
+  <!-- Loading Indicator for Fetching News (Initially Hidden) -->
+  <div id="loadingIndicatorFetch" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background-color:white; padding:10px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.5);">
+    <i class="fa fa-spinner fa-spin"></i> يتم جلب البيانات...
+  </div>
+
+  <!-- Loading Indicator for Telegram Post (Initially Hidden) -->
+  <div id="loadingIndicatorTelegram" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background-color:white; padding:10px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.5);">
+    <i class="fa fa-spinner fa-spin"></i> النشر إلى تيليجرام....
+  </div>
+
+ <!-- Success Alert -->
 <div id="successAlert" style="display:none; position:fixed; top:20px; left:20px; z-index:9999; background-color:#28a745; color:white; padding:15px 20px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.3);">
-  <i class="fa fa-check-circle"></i> <span id="successMessage">تم النشر إلى تيليجرام بنجاح!</span>
+  <i class="fa fa-check-circle"></i> <span id="successMessage">Operation completed successfully!</span>
 </div>
 
-
-
+<!-- Error Alert -->
+<div id="errorAlert" style="display:none; position:fixed; top:20px; left:20px; z-index:9999; background-color:#dc3545; color:white; padding:15px 20px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.3);">
+  <i class="fa fa-times-circle"></i> <span id="errorMessage">An error occurred. Please try again later.</span>
+</div>
 
 
   <div class="col-lg-12">
     <div class="panel panel-default">
-      <div class="panel-heading">جميع المصادر المتاحة</div>
+      <div class="panel-heading" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="panel-title"><i class="fa fa-newspaper-o fa-fw"></i> الأخبار</h3>
+        <button id = "postAllToTelegram" class="btn btn-primary">نشر جميع الاخبار  لتيلجرام</button>
+      </div>
+      
       <!-- /.panel-heading -->
       <div class="panel-body">
         <table class="table table-striped table-bordered table-hover">
@@ -32,7 +44,14 @@
               </tr>
           </thead>
           <tbody>
-            <!-- if no data , button scrap news  -->
+            <!-- If there are no news items, show a "اجلب اخبار" button -->
+            <% if (news.length === 0) { %>
+              <tr>
+                <td colspan="5" class="text-center">
+                  <button id="scrapeAllButton" class="btn btn-primary">اجلب اخبار</button>
+                </td>
+              </tr>
+            <% } else { %>
               <% news.forEach(item => { %>
               <tr class="odd gradeX" id="news-row-<%= item.news_id %>">
                   <td><%= item.news_id %></td>
@@ -68,28 +87,17 @@
                   </a>
               <% } %>
 
-              
-              
-
-
-
-
-                
-                
-                   
-                  </td>
+              </td>
               </tr>
               <% }); %>
+            <% } %>
           </tbody>
-      </table>
-      
-      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        </table>
 
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-
-      <script>
-   
-   $(document).ready(function() {
+   <script>
+    $(document).ready(function() {
     // Set up AJAX with CSRF token for security
     $.ajaxSetup({
         headers: {
@@ -97,7 +105,88 @@
         }
     });
 
-    // Handle the click event on the share button
+    // Handle the "اجلب اخبار" button click (Fetch All News)
+    $('#scrapeAllButton').on('click', async function(event) {
+        event.preventDefault();
+
+        try {
+            // Disable the button to prevent multiple clicks
+            $(this).prop('disabled', true).addClass('disabled');
+
+            // Show the loading indicator for fetching news
+            $('#loadingIndicatorFetch').show();
+
+            // Fetch data from all sources
+            const response = await fetch(`/sources/scrap`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            handleScrapeResponse(data);
+
+        } catch (error) {
+            console.error("Error fetching the data:", error);
+            showCustomAlert('error', "حدث خطأ أثناء جلب البيانات، الرجاء المحاولة مرة أخرى");
+        } finally {
+            // Hide loading indicator
+            $('#loadingIndicatorFetch').hide();
+            window.location.reload(); // Reload the page to update the content
+            // Re-enable the button after the operation
+            $(this).prop('disabled', false).removeClass('disabled');
+        }
+    });
+
+    // Handle the "نشر جميع الاخبار لتيلجرام" button click (Post All News to Telegram)
+    $('#postAllToTelegram').on('click', async function(event) {
+        event.preventDefault();
+
+        try {
+            // Disable the button to prevent multiple clicks
+            $(this).prop('disabled', true).addClass('disabled');
+
+            // Show the loading indicator for posting to Telegram
+            $('#loadingIndicatorTelegram').show();
+
+            // Post all news to Telegram (Example API call)
+            const response = await fetch(`/share/telegram/all`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Handle the response after posting to Telegram
+            if (data.success) {
+                showSuccessAlert('تم نشر جميع الأخبار إلى تيليجرام بنجاح!');
+            } else {
+                showCustomAlert('error', "حدث خطأ أثناء النشر إلى تيليجرام.");
+            }
+
+        } catch (error) {
+            console.error("Error posting to Telegram:", error);
+            showCustomAlert('error', "حدث خطأ أثناء النشر إلى تيليجرام.");
+        } finally {
+            // Hide the loading indicator for posting to Telegram
+            $('#loadingIndicatorTelegram').hide();
+            // Re-enable the button after the operation
+            $(this).prop('disabled', false).removeClass('disabled');
+        }
+    });
+
+    // Handle sharing a single news item to Telegram
     $('.share-telegram').on('click', function(event) {
         event.preventDefault();
         
@@ -105,8 +194,8 @@
         const $icon = $(this).find('i'); // Find the icon within the clicked element
         const $this = $(this); // Store the clicked element for later use
 
-        // Show the loading indicator
-        $('#loadingIndicator').show();
+        // Show the loading indicator for Telegram post
+        $('#loadingIndicatorTelegram').show();
 
         // Make an AJAX POST request to share the news
         $.ajax({
@@ -114,7 +203,7 @@
             type: 'POST',
             success: function(response) {
                 // Hide the loading indicator
-                $('#loadingIndicator').hide();
+                $('#loadingIndicatorTelegram').hide();
 
                 if (response.success) {
                     // Update the icon to a checkmark and disable the link
@@ -122,83 +211,310 @@
                     $this.off('click'); // Remove the click event to prevent further clicks
                     $this.addClass('disabled-checkmark'); // Add class to change the color
 
-                    // Show the success alert
+                    // Show the success alert with the correct message
                     showSuccessAlert('تم النشر إلى تيليجرام بنجاح!');
                 } else {
-                    alert(response.message || 'Failed to post to Telegram.');
+                    showCustomAlert('error', response.message || 'Failed to post to Telegram.');
                 }
             },
             error: function(xhr, status, error) {
                 // Hide the loading indicator
-                $('#loadingIndicator').hide();
+                $('#loadingIndicatorTelegram').hide();
 
                 console.error('AJAX Error:', status, error);
-                alert('An error occurred. Please try again later.');
+                showCustomAlert('error', 'حدث خطأ أثناء النشر إلى تيليجرام. الرجاء المحاولة مرة أخرى.');
             }
         });
     });
 });
 
-function showSuccessAlert(message) {
-    const alertBox = document.getElementById('successAlert');
-    alertBox.querySelector('#successMessage').textContent = message;
-    alertBox.style.display = 'block';
+function handleScrapeResponse(data) {
+    const { newsCount, isFetching } = data;
 
-    // Automatically hide the alert after 3 seconds
+    if (isFetching) {
+        // Update the success message for scraping news
+        showSuccessAlert(`تم جلب ${newsCount} خبر جديد`);
+    } else {
+        showCustomAlert('error', "لا يوجد أخبار جديدة");
+    }
+
+    // Reload the page to update the content
     setTimeout(() => {
-        alertBox.style.display = 'none';
-    }, 3000);
+        window.location.reload();
+    }, 2000);
 }
 
+function showSuccessAlert(message) {
+    const alertBox = document.getElementById('successAlert');
+    if (alertBox) {
+        alertBox.querySelector('#successMessage').textContent = message;
+        alertBox.style.display = 'block';
 
-      </script>
-      
-      <style>
-        .disabled-checkmark{
-          pointer-events: none;
-          cursor:auto;
+        // Automatically hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.style.display = 'none';
+        }, 3000);
+    } else {
+        console.error('Success alert box not found in the DOM.');
+    }
+}
+
+function showCustomAlert(type, message) {
+    const alertBox = document.getElementById(type === 'success' ? 'successAlert' : 'errorAlert');
+    if (alertBox) {
+        alertBox.querySelector('span').textContent = message;
+        alertBox.style.display = 'block';
+
+        setTimeout(() => {
+            alertBox.style.display = 'none';
+        }, 3000); // Hide the alert after 3 seconds
+    } else {
+        console.error('Alert box not found in the DOM.');
+    }
+}
+
+   </script>
+
+        <style>
+          .disabled-checkmark {
+              pointer-events: none;
+              cursor: auto;
+          }
+
+          .fa-check {
+              color: green !important;
+          }
+        </style>
+
+<div class="row">
+  <div class="col-sm-6"></div>
+  <div class="col-sm-6">
+    <div
+      class="dataTables_paginate paging_simple_numbers"
+      id="dataTables-news_paginate"
+    >
+      <ul class="pagination">
+        <!-- Hide pagination if there is no news -->
+        <% if (news.length > 0) { %>
+          <% if (currentPage > 1) { %>
+          <li
+            class="paginate_button previous"
+            aria-controls="dataTables-news"
+            tabindex="0"
+            id="dataTables-news_previous"
+          >
+            <a href="/news?page=<%= currentPage - 1 %>">Previous</a>
+          </li>
+          <% } %> 
+          <% for (let i = 1; i <= totalPages; i++) { %>
+          <li
+            class="paginate_button <%= currentPage == i ? 'active' : ''%>"
+            aria-controls="dataTables-news"
+            tabindex="0"
+          >
+            <a href="/news?page=<%= i %>"><%= i %></a>
+          </li>
+          <% } %> 
+          <% if (currentPage < totalPages) { %>
+          <li
+            class="paginate_button next"
+            aria-controls="dataTables-news"
+            tabindex="0"
+            id="dataTables-news_next"
+          >
+            <a href="/news?page=<%= currentPage + 1 %>">Next</a>
+          </li>
+          <% } %>
+        <% } %>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    // Set up AJAX with CSRF token for security
+    $.ajaxSetup({
+      headers: {
+        'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+      }
+    });
+
+    // Handle the "اجلب اخبار" button click (Fetch All News)
+    $('#scrapeAllButton').on('click', async function(event) {
+      event.preventDefault();
+
+      try {
+        // Disable the button to prevent multiple clicks
+        $(this).prop('disabled', true).addClass('disabled');
+
+        // Show the loading indicator for fetching news
+        $('#loadingIndicatorFetch').show();
+
+        // Fetch data from all sources
+        const response = await fetch(`/sources/scrap`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      </style>
+
+        const data = await response.json();
+        handleScrapeResponse(data);
+
+      } catch (error) {
+        console.error("Error fetching the data:", error);
+        showCustomAlert('error', "حدث خطأ أثناء جلب البيانات، الرجاء المحاولة مرة أخرى");
+      } finally {
+        // Hide loading indicator
+        $('#loadingIndicatorFetch').hide();
+        window.location.reload(); // Reload the page to update the content
+        // Re-enable the button after the operation
+        $(this).prop('disabled', false).removeClass('disabled');
+      }
+    });
+
+    // Handle the "نشر جميع الاخبار لتيلجرام" button click (Post All News to Telegram)
+    $('#postAllToTelegram').on('click', async function(event) {
+      event.preventDefault();
+
+      try {
+        // Disable the button to prevent multiple clicks
+        $(this).prop('disabled', true).addClass('disabled');
+
+        // Show the loading indicator for posting to Telegram
+        $('#loadingIndicatorTelegram').show();
+
+        // Post all news to Telegram (Example API call)
+        const response = await fetch(`/share/telegram?all=true`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Handle the response after posting to Telegram
+        if (data.success) {
+          showSuccessAlert('تم نشر جميع الأخبار إلى تيليجرام بنجاح!');
+        } else {
+          showCustomAlert('error', "حدث خطأ أثناء النشر إلى تيليجرام.");
+        }
+
+      } catch (error) {
+        console.error("Error posting to Telegram:", error);
+        showCustomAlert('error', "حدث خطأ أثناء النشر إلى تيليجرام.");
+      } finally {
+        // Hide the loading indicator for posting to Telegram
+        $('#loadingIndicatorTelegram').hide();
+        // Re-enable the button after the operation
+        $(this).prop('disabled', false).removeClass('disabled');
+      }
+    });
+
+    // Handle sharing a single news item to Telegram
+    $('.share-telegram').on('click', function(event) {
+      event.preventDefault();
       
-        <div class="row">
-          <div class="col-sm-6"></div>
-          <div class="col-sm-6">
-            <div
-              class="dataTables_paginate paging_simple_numbers"
-              id="dataTables-news_paginate"
-            >
-              <ul class="pagination">
-                <% if (currentPage > 1) { %>
-                <li
-                  class="paginate_button previous"
-                  aria-controls="dataTables-news"
-                  tabindex="0"
-                  id="dataTables-news_previous"
-                >
-                  <a href="/news?page=<%= currentPage - 1 %>">Previous</a>
-                </li>
-                <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
-                <li
-                  class="paginate_button <%= currentPage == i ? 'active' : ''%>"
-                  aria-controls="dataTables-news"
-                  tabindex="0"
-                >
-                  <a href="/news?page=<%= i %>"><%= i %></a>
-                </li>
-                <% } %> <% if (currentPage < totalPages) { %>
-                <li
-                  class="paginate_button next"
-                  aria-controls="dataTables-news"
-                  tabindex="0"
-                  id="dataTables-news_next"
-                >
-                  <a href="/news?page=<%= currentPage + 1 %>">Next</a>
-                </li>
-                <% } %>
-              </ul>
-            </div>
-          </div>
-        </div>
+      const newsId = $(this).data('id'); // Get the news ID from data-id attribute
+      const $icon = $(this).find('i'); // Find the icon within the clicked element
+      const $this = $(this); // Store the clicked element for later use
+
+      console.log(`Attempting to share news ID ${newsId} to Telegram`);
+
+      // Show the loading indicator for Telegram post
+      $('#loadingIndicatorTelegram').show();
+
+      // Make an AJAX POST request to share the news
+      $.ajax({
+        url: `/share/telegram/${newsId}`,
+        type: 'POST',
+        success: function(response) {
+          // Hide the loading indicator
+          $('#loadingIndicatorTelegram').hide();
+
+          if (response.success) {
+            console.log(`News ID ${newsId} successfully shared to Telegram`);
+            // Update the icon to a checkmark and disable the link
+            $icon.removeClass('fa-share').addClass('fa-check');
+            $this.off('click'); // Remove the click event to prevent further clicks
+            $this.addClass('disabled-checkmark'); // Add class to change the color
+
+            // Show the success alert with the correct message
+            showSuccessAlert('تم النشر إلى تيليجرام بنجاح!');
+          } else {
+            showCustomAlert('error', response.message || 'Failed to post to Telegram.');
+          }
+        },
+        error: function(xhr, status, error) {
+          // Hide the loading indicator
+          $('#loadingIndicatorTelegram').hide();
+
+          console.error(`AJAX Error: ${status} - ${error}`);
+          showCustomAlert('error', 'حدث خطأ أثناء النشر إلى تيليجرام. الرجاء المحاولة مرة أخرى.');
+        }
+      });
+    });
+  });
+
+  function handleScrapeResponse(data) {
+    const { newsCount, isFetching } = data;
+
+    if (isFetching) {
+      // Update the success message for scraping news
+      showSuccessAlert(`تم جلب ${newsCount} خبر جديد`);
+    } else {
+      showCustomAlert('error', "لا يوجد أخبار جديدة");
+    }
+
+    // Reload the page to update the content
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+  }
+
+  function showSuccessAlert(message) {
+    const alertBox = document.getElementById('successAlert');
+    if (alertBox) {
+      alertBox.querySelector('#successMessage').textContent = message;
+      alertBox.style.display = 'block';
+
+      // Automatically hide the alert after 3 seconds
+      setTimeout(() => {
+        alertBox.style.display = 'none';
+      }, 3000);
+    } else {
+      console.error('Success alert box not found in the DOM.');
+    }
+  }
+
+  function showCustomAlert(type, message) {
+    const alertBox = document.getElementById(type === 'success' ? 'successAlert' : 'errorAlert');
+    if (alertBox) {
+      alertBox.querySelector(type === 'success' ? '#successMessage' : '#errorMessage').textContent = message;
+      alertBox.style.display = 'block';
+
+      setTimeout(() => {
+        alertBox.style.display = 'none';
+      }, 3000); // Hide the alert after 3 seconds
+    } else {
+      console.error('Alert box not found in the DOM.');
+    }
+  }
+</script>
+
+
+
+
       </div>
       <!-- /.panel-body -->
     </div>
@@ -207,12 +523,6 @@ function showSuccessAlert(message) {
   <!-- /.col-lg-12 -->
 </div>
 <!-- /.row -->
-
-<style>
-  .fa-check{
-    color: green !important;
-  }
-</style>
 
 <!-- Modal -->
 <div
@@ -247,11 +557,3 @@ function showSuccessAlert(message) {
     </div>
   </div>
 </div>
-
-
-
-
-<!-- ajax error in post telegram -->
-<!-- session issues -->
-<!-- add many sources -->
-<!-- button to scrap the news -->

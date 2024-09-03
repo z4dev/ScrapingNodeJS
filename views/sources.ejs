@@ -62,10 +62,45 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("DOMContentLoaded", function() {
+    let isReloadPending = false;
+
     // Attach event listeners to all scraper buttons
     document.querySelectorAll(".btn-scraper").forEach(button => {
         button.addEventListener("click", handleScrapeClick);
+    });
+
+    // Event listener for scraping all sources
+    document.getElementById("scrapeAllButton").addEventListener("click", async function() {
+        try {
+            // Disable the button to prevent multiple clicks
+            this.disabled = true;
+            this.classList.add('disabled'); // Optional: add a disabled class for styling
+
+            showLoadingIndicator(true);
+
+            const response = await fetch(`/sources/scrap`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            handleScrapeResponse(data);
+
+        } catch (error) {
+            console.error("Error fetching the data:", error);
+            showCustomAlert('error', "حدث خطأ أثناء جلب البيانات، الرجاء المحاولة مرة أخرى");
+        } finally {
+            showLoadingIndicator(false);
+            this.disabled = false;
+            this.classList.remove('disabled'); // Optional: remove the disabled class for styling
+        }
     });
 
     async function handleScrapeClick(event) {
@@ -75,9 +110,8 @@ document.addEventListener("DOMContentLoaded", function() {
         console.log(`Scraping data for URL: ${url}`);
 
         try {
-            // Disable the button to prevent multiple clicks
             button.disabled = true;
-            button.classList.add('disabled'); // Optional: add a disabled class for styling
+            button.classList.add('disabled');
 
             showLoadingIndicator(true);
 
@@ -100,9 +134,8 @@ document.addEventListener("DOMContentLoaded", function() {
             showCustomAlert('error', "حدث خطأ أثناء جلب البيانات، الرجاء المحاولة مرة أخرى");
         } finally {
             showLoadingIndicator(false);
-            // Re-enable the button after loading
             button.disabled = false;
-            button.classList.remove('disabled'); // Optional: remove the disabled class for styling
+            button.classList.remove('disabled');
         }
     }
 
@@ -110,16 +143,18 @@ document.addEventListener("DOMContentLoaded", function() {
         const { newsCount, isFetching } = data;
 
         if (isFetching) {
-            console.log(isFetching);
             showCustomAlert('success', `تم جلب ${newsCount} خبر جديد`);
         } else {
             showCustomAlert('error', "لا يوجد أخبار جديدة");
         }
 
-        // Optionally reload the page or update the news count after a successful scrape
-        setTimeout(() => {
-            window.location.reload();
-        }, 2000);
+        // Reload the page if it is not already pending
+        if (!isReloadPending) {
+            isReloadPending = true;
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        }
     }
 
     function showLoadingIndicator(show) {
@@ -134,12 +169,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
         setTimeout(() => {
             alertBox.style.display = 'none';
-        }, 3000); // Hide the alert after 3 seconds
+        }, 3000);
     }
 });
 
 </script>
-
+  
 <style>
   .btn-scraper.disabled {
     opacity: 0.5;
