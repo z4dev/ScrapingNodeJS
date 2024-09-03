@@ -1,72 +1,80 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import pool from '../config/dbConfig.js';
+import { SOURCES } from '../helpers/constants.js'; 
 
-const url = 'https://www.aitnews.com/';
-
-const scrapeAndInsert = async () => {
+const scrapeAndInsert = async (url) => {
     let connection;
     try {
-        connection = await pool.getConnection();  // Get a connection from the pool
-        console.log('Database connection established.');
+        const sourceConfig = SOURCES.find(source => source.url === url);
+        if (!sourceConfig) {
+            throw new Error('No source configuration found for the provided URL');
+        }
+
+        connection = await pool.getConnection(); 
 
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
-        console.log('Webpage content fetched successfully.');
 
         const newsArray = [];
 
         // Function to process each element
         const processElement = async (element) => {
-            const title = $(element).find('a[aria-label]').attr('aria-label');
-            const articleUrl = $(element).find('a').attr('href');
-            const date = $(element).find('.date').text();
-            let image = $(element).find('img').attr('src');
-        
-            if (!image) {
-                const divStyle = $(element).find('.big-thumb-left-box-inner').attr('style');
+            let title;
+            if (url === SOURCES[0].url) {
+                title = $(element).find(sourceConfig.title).attr('aria-label').trim();
+            } else {
+                title = $(element).find(sourceConfig.title).text().trim();
+            }
+
+            const articleUrl = $(element).find(sourceConfig.articleUrl).attr('href');
+
+            // Attempt to retrieve the date, if not found, set it to the current date
+            let date = $(element).find(sourceConfig.date).text().trim();
+            if (!date) {
+                date = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });  // Default to current date
+            }
+
+            let image = $(element).find(sourceConfig.image).attr('src') || $(element).find(sourceConfig.image).attr('data-src');
+            console.log(`Processing article: ${title}`);
+
+            if (!image && sourceConfig.imageStyle) {
+                const divStyle = $(element).find(sourceConfig.imageStyle).attr('style');
                 const urlRegex = /url\(["']?(.*?)["']?\)/;
                 const match = divStyle ? divStyle.match(urlRegex) : null;
                 image = match ? match[1] : null;
             }
-        
+
             const [rows] = await connection.query('SELECT * FROM news_tbl WHERE url = ?', [articleUrl]);
             if (rows.length > 0) {
-                console.log('This article already exists in the database:', title);
+                console.log(`Article with URL ${articleUrl} already exists in the database.`);
             } else {
-                console.log('This article does not exist in the database:', title);
                 // Add the new article to the newsArray
                 newsArray.push({
-                    title: title || "No title",  // Handle cases where the title might be undefined
-                    date: date || "No date",    // Handle cases where the date might be undefined
-                    image: image || "No image",  // Handle cases where the image might be undefined
+                    title: title || "No title",
+                    date: date,  // Use either the scraped date or the default date
+                    image: image || "No image",
                     url: articleUrl,
-                    keywords: '',  // Add logic to extract keywords if needed
-                    source_id: 1   // Assuming a static source_id, change as necessary
+                    keywords: '',  
+                    source_id: sourceConfig.source_id  
                 });
             }
         };
         
-        // Process elements for both classes
-        const elements = $('.post-item, .tie-video').toArray();
-        console.log('Number of elements found:', elements.length);
+        
+
+        const elements = $(sourceConfig.selector).toArray();
 
         for (const element of elements) {
             await processElement(element);
         }
 
-        console.log('Total new articles to insert:', newsArray.length);
 
-        // Check if there's data to insert
         if (newsArray.length === 0) {
-            console.log('No new articles to insert.');
             return { isFetching: false, newsCount: 0 };
         }
 
-        // Insert the news data into the database
         const insertedCount = await insertNewsBatch(connection, newsArray);
-
-        console.log('Insert operation completed. Inserted count:', insertedCount);
         return { isFetching: true, newsCount: insertedCount };
 
     } catch (error) {
@@ -74,16 +82,13 @@ const scrapeAndInsert = async () => {
         return { isFetching: false, newsCount: 0 };
     } finally {
         if (connection) {
-            connection.release();  // Release the connection back to the pool
-            console.log('Database connection closed.');
+            connection.release();  
         }
     }
 };
 
-// Function to insert news data into the database in batch
 const insertNewsBatch = async (connection, newsArray) => {
     if (newsArray.length === 0) {
-        console.log('No data to insert.');
         return 0;
     }
 
@@ -99,7 +104,6 @@ const insertNewsBatch = async (connection, newsArray) => {
 
     try {
         const [result] = await connection.query(query, [values]);
-        console.log('Batch insert successful:', result);
         return newsArray.length;
     } catch (err) {
         console.error('Error inserting data into the database:', err);

@@ -58,7 +58,7 @@ export default async (id) => {
         // Send the image to the Telegram channel
         if (news.image) {
             await bot.telegram.sendPhoto(TELEGRAM_CHANNEL_ID, news.image, {
-                caption: `*${news.title}*\n${news.date}\n[Read more](${news.url})`,
+                caption: `*${news.title}*\n\n\n\n${news.date}\n[Read more](${news.url})`,
                 parse_mode: 'Markdown',
             });
         } else {
