@@ -2,12 +2,10 @@
   <meta name="csrf-token" content="<%= csrfToken %>">
 </head>
 
-
 <div class="row">
-  
   <!-- Loading Indicator (Initially Hidden) -->
   <div id="loadingIndicator" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background-color:white; padding:10px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.5);">
-    <i class="fa fa-spinner fa-spin"></i> النشر إلى تيليجرام....
+    <i class="fa fa-spinner fa-spin"></i> <span id="loadingMessage">جاري جلب البيانات....</span>
   </div>
 
   <!-- Success Alert -->
@@ -29,6 +27,7 @@
             </button>
           </div>
         <% } else { %>
+          <!-- Show table only when there is data -->
           <table class="table table-striped table-bordered table-hover">
             <thead>
                 <tr>
@@ -47,29 +46,17 @@
                     <td><%= item.news_date %></td>
                     <td><%= item.source_name %></td>
                     <td>
-                      <a
-                      href="#"
-                      role="button"
-                      title="صورة الخبر"
-                      data-toggle="modal"
-                      data-target="#myModal"
-                      data-image-url="<%= item.news_image %>"
-                      ><i class="fa fa-image fa-fw"></i
-                    ></a>
-                    <a
-                      href="<%= item.news_url %>"
-                      target="_blank"
-                      title="رابط الخبر"
-                      ><i class="fa fa-link fa-fw"></i
-                    ></a>
-                         
-
+                      <a href="#" role="button" title="صورة الخبر" data-toggle="modal" data-target="#myModal" data-image-url="<%= item.news_image %>">
+                        <i class="fa fa-image fa-fw"></i>
+                      </a>
+                      <a href="<%= item.news_url %>" target="_blank" title="رابط الخبر">
+                        <i class="fa fa-link fa-fw"></i>
+                      </a>
                     <% if (parseInt(item.is_published) === 1) { %>
-                      <i class="fa fa-check" .disabled-checkmark ></i> <!-- Show checkmark if published -->
-            
+                      <i class="fa fa-check disabled-checkmark"></i> <!-- Show checkmark if published -->
                     <% } else { %>
                       <a href="#" class="share-telegram" data-id="<%= item.news_id %>">
-                          <i class="fa fa-share"></i> <!-- Show share icon as a link -->
+                        <i class="fa fa-share"></i> <!-- Show share icon as a link -->
                       </a>
                     <% } %>
                     </td>
@@ -80,82 +67,87 @@
         <% } %>
 
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-      <script>
-        $(document).ready(function() {
-    // Set up AJAX with CSRF token for security
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
-    // Handle the "جلب بيانات" button click
-    $('#fetchDataButton').on('click', function(event) {
-        event.preventDefault();
-
-        // Disable the button to prevent multiple clicks
-        const $button = $(this);
-        $button.prop('disabled', true).addClass('disabled');
-
-        // Show the loading indicator
-        $('#loadingIndicator').show();
-
-        // Make an AJAX GET request to fetch the data
-        $.ajax({
-            url: '/sources/scrap',
-            type: 'GET',
-            success: function(response) {
-                console.log('Response from server:', response); // Log the full response
-                $('#loadingIndicator').hide();
-
-                $button.prop('disabled', false).removeClass('disabled');
-
-                // Check the response object for the expected data
-                if (response.isFetching && response.newsCount > 0) {
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000); // Add a delay before reloading
-                } else {
-                    alert(response.message || 'Failed to fetch data.');
-                }
-            },
-            error: function(xhr, status, error) {
-                // Hide the loading indicator
-                $('#loadingIndicator').hide();
-
-                // Re-enable the button
-                $button.prop('disabled', false).removeClass('disabled');
-
-                console.error('AJAX Error:', status, error);
-                alert('An error occurred. Please try again later.');
-            }
-        });
-    });
-
-    // Handle the click event on the share button
-    $('.share-telegram').on('click', function(event) {
-        event.preventDefault();
-        
-        const newsId = $(this).data('id'); // Get the news ID from data-id attribute
-        const $icon = $(this).find('i'); // Find the icon within the clicked element
-        const $this = $(this); // Store the clicked element for later use
-
-        // Show the loading indicator
-        $('#loadingIndicator').show();
-
-        // Make an AJAX POST request to share the news
-        $.ajax({
-            url: `/share/telegram/${newsId}`,
-            type: 'POST',
-            headers: {
+        <script>
+          $(document).ready(function() {
+            // Set up AJAX with CSRF token for security
+            $.ajaxSetup({
+              headers: {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                // Hide the loading indicator
-                $('#loadingIndicator').hide();
+              }
+            });
 
-                if (response.success) {
+            // Handle the "جلب بيانات" button click
+            $('#fetchDataButton').on('click', function(event) {
+              event.preventDefault();
+
+              // Disable the button to prevent multiple clicks
+              const $button = $(this);
+              $button.prop('disabled', true).addClass('disabled');
+
+              // Update the loading message
+              $('#loadingMessage').text('جاري جلب البيانات....');
+              
+              // Show the loading indicator
+              $('#loadingIndicator').show();
+
+              // Make an AJAX GET request to fetch the data
+              $.ajax({
+                url: '/sources/scrap',
+                type: 'GET',
+                success: function(response) {
+                  console.log('Response from server:', response); // Log the full response
+                  $('#loadingIndicator').hide();
+
+                  $button.prop('disabled', false).removeClass('disabled');
+
+                  // Check the response object for the expected data
+                  if (response.isFetching && response.newsCount > 0) {
+                    setTimeout(() => {
+                      location.reload();
+                    }, 1000); // Add a delay before reloading
+                  } else {
+                    alert(response.message || 'Failed to fetch data.');
+                  }
+                },
+                error: function(xhr, status, error) {
+                  // Hide the loading indicator
+                  $('#loadingIndicator').hide();
+
+                  // Re-enable the button
+                  $button.prop('disabled', false).removeClass('disabled');
+
+                  console.error('AJAX Error:', status, error);
+                  alert('An error occurred. Please try again later.');
+                }
+              });
+            });
+
+            // Handle the click event on the share button
+            $('.share-telegram').on('click', function(event) {
+              event.preventDefault();
+              
+              const newsId = $(this).data('id'); // Get the news ID from data-id attribute
+              const $icon = $(this).find('i'); // Find the icon within the clicked element
+              const $this = $(this); // Store the clicked element for later use
+
+              // Update the loading message to Telegram sharing
+              $('#loadingMessage').text('النشر إلى تيليجرام....');
+              
+              // Show the loading indicator
+              $('#loadingIndicator').show();
+
+              // Make an AJAX POST request to share the news
+              $.ajax({
+                url: `/share/telegram/${newsId}`,
+                type: 'POST',
+                headers: {
+                  'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                  // Hide the loading indicator
+                  $('#loadingIndicator').hide();
+
+                  if (response.success) {
                     // Update the icon to a checkmark and disable the link
                     $icon.removeClass('fa-share').addClass('fa-check');
                     $this.off('click'); // Remove the click event to prevent further clicks
@@ -163,76 +155,63 @@
 
                     // Show the success alert
                     showSuccessAlert('تم النشر إلى تيليجرام بنجاح!');
-                } else {
+                  } else {
                     alert(response.message || 'Failed to post to Telegram.');
+                  }
+                },
+                error: function(xhr, status, error) {
+                  // Hide the loading indicator
+                  $('#loadingIndicator').hide();
+
+                  console.error('AJAX Error:', status, error);
+                  console.error('Response:', xhr.responseText); // Log the full response for debugging
+                  alert('An error occurred. Please try again later.');
                 }
-            },
-            error: function(xhr, status, error) {
-                // Hide the loading indicator
-                $('#loadingIndicator').hide();
+              });
+            });
+          });
 
-                console.error('AJAX Error:', status, error);
-                console.error('Response:', xhr.responseText); // Log the full response for debugging
-                alert('An error occurred. Please try again later.');
-            }
-        });
-    });
-});
+          function showSuccessAlert(message) {
+            const alertBox = document.getElementById('successAlert');
+            alertBox.querySelector('#successMessage').textContent = message;
+            alertBox.style.display = 'block';
 
-function showSuccessAlert(message) {
-    const alertBox = document.getElementById('successAlert');
-    alertBox.querySelector('#successMessage').textContent = message;
-    alertBox.style.display = 'block';
-
-    // Automatically hide the alert after 3 seconds
-    setTimeout(() => {
-        alertBox.style.display = 'none';
-    }, 3000);
-}
-
-      </script>
+            // Automatically hide the alert after 3 seconds
+            setTimeout(() => {
+              alertBox.style.display = 'none';
+            }, 3000);
+          }
+        </script>
         
         <style>
-          .disabled-checkmark{
+          .disabled-checkmark {
             pointer-events: none;
-            cursor:auto;
+            cursor: auto;
+          }
+          .fa-check {
+            color: green !important;
           }
         </style>
-        
+
         <div class="row">
           <div class="col-sm-6"></div>
           <div class="col-sm-6">
-            <div
-              class="dataTables_paginate paging_simple_numbers"
-              id="dataTables-news_paginate"
-            >
+            <div class="dataTables_paginate paging_simple_numbers" id="dataTables-news_paginate">
               <ul class="pagination">
                 <% if (currentPage > 1) { %>
-                <li
-                  class="paginate_button previous"
-                  aria-controls="dataTables-news"
-                  tabindex="0"
-                  id="dataTables-news_previous"
-                >
-                  <a href="/news?page=<%= currentPage - 1 %>">Previous</a>
-                </li>
-                <% } %> <% for (let i = 1; i <= totalPages; i++) { %>
-                <li
-                  class="paginate_button <%= currentPage == i ? 'active' : ''%>"
-                  aria-controls="dataTables-news"
-                  tabindex="0"
-                >
-                  <a href="/news?page=<%= i %>"><%= i %></a>
-                </li>
-                <% } %> <% if (currentPage < totalPages) { %>
-                <li
-                  class="paginate_button next"
-                  aria-controls="dataTables-news"
-                  tabindex="0"
-                  id="dataTables-news_next"
-                >
-                  <a href="/news?page=<%= currentPage + 1 %>">Next</a>
-                </li>
+                  <li class="paginate_button previous" aria-controls="dataTables-news" tabindex="0" id="dataTables-news_previous">
+                    <a href="/news?page=<%= currentPage - 1 %>">Previous</a>
+                  </li>
+                <% } %>
+                <% for (let i = 1; i <= totalPages; i++) { %>
+                  <li class="paginate_button <%= currentPage == i ? 'active' : '' %>" aria-controls="dataTables-news" tabindex="0">
+                    <a href="/news?page=<%= i %>"><%= i %></a>
+                  </li>
+                <% } %>
+                <% if (currentPage < totalPages) { %>
+                  <li class="paginate_button next" aria-controls="dataTables-news" tabindex="0" id="dataTables-news_next">
+                    <a href="/news?page=<%= currentPage + 1 %>">Next</a>
+                  </li>
                 <% } %>
               </ul>
             </div>
@@ -247,41 +226,19 @@ function showSuccessAlert(message) {
 </div>
 <!-- /.row -->
 
-<style>
-  .fa-check{
-    color: green !important;
-  }
-</style>
-
 <!-- Modal -->
-<div
-  id="myModal"
-  class="modal fade"
-  tabindex="-1"
-  role="dialog"
-  aria-labelledby="myModalLabel"
-  aria-hidden="true"
->
+<div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <button
-          type="button"
-          class="close"
-          data-dismiss="modal"
-          aria-hidden="true"
-        >
-          &times;
-        </button>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
         <h4 class="modal-title" id="myModalLabel">صورة الخبر</h4>
       </div>
       <div class="modal-body">
         <img id="modalImage" src="" width="100%" />
       </div>
       <div class="modal-footer">
-        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">
-          إغلاق
-        </button>
+        <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">إغلاق</button>
       </div>
     </div>
   </div>
