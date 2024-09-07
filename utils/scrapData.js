@@ -1,17 +1,14 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import pool from '../config/dbConfig.js';
+import { queryWithRetry } from '../config/dbConfig.js';  // Import queryWithRetry function
 import { SOURCES } from '../helpers/constants.js'; 
 
 const scrapeAndInsert = async (url) => {
-    let connection;
     try {
         const sourceConfig = SOURCES.find(source => source.url === url);
         if (!sourceConfig) {
             throw new Error('No source configuration found for the provided URL');
         }
-
-        connection = await pool.getConnection(); 
 
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
@@ -45,7 +42,8 @@ const scrapeAndInsert = async (url) => {
                 image = match ? match[1] : null;
             }
 
-            const [rows] = await connection.query('SELECT * FROM news_tbl WHERE url = ?', [articleUrl]);
+            // Query the database to check if the article already exists
+            const rows = await queryWithRetry('SELECT * FROM news_tbl WHERE url = ?', [articleUrl]);
             if (rows.length > 0) {
                 console.log(`Article with URL ${articleUrl} already exists in the database.`);
             } else {
@@ -61,33 +59,26 @@ const scrapeAndInsert = async (url) => {
             }
         };
         
-        
-
         const elements = $(sourceConfig.selector).toArray();
 
         for (const element of elements) {
             await processElement(element);
         }
 
-
         if (newsArray.length === 0) {
             return { isFetching: false, newsCount: 0 };
         }
 
-        const insertedCount = await insertNewsBatch(connection, newsArray);
+        const insertedCount = await insertNewsBatch(newsArray);
         return { isFetching: true, newsCount: insertedCount };
 
     } catch (error) {
         console.error('Error while fetching or processing data:', error);
         return { isFetching: false, newsCount: 0 };
-    } finally {
-        if (connection) {
-            connection.release();  
-        }
     }
 };
 
-const insertNewsBatch = async (connection, newsArray) => {
+const insertNewsBatch = async (newsArray) => {
     if (newsArray.length === 0) {
         return 0;
     }
@@ -103,7 +94,8 @@ const insertNewsBatch = async (connection, newsArray) => {
     ]);
 
     try {
-        const [result] = await connection.query(query, [values]);
+        // Insert news data using queryWithRetry
+        const result = await queryWithRetry(query, [values]);
         return newsArray.length;
     } catch (err) {
         console.error('Error inserting data into the database:', err);

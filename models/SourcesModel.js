@@ -1,13 +1,12 @@
-import pool from '../config/dbConfig.js';
+import { queryWithRetry } from '../config/dbConfig.js';  // Import the queryWithRetry function
 
 class SourcesModel {
 
     static async getSources() {
-        let connection;
         try {
-            connection = await pool.getConnection();  // Get a connection from the pool
-            const [rows] = await connection.query('SELECT * FROM sources_vw');
-
+            // Use the queryWithRetry function with the appropriate SQL query
+            const rows = await queryWithRetry('SELECT * FROM sources_vw');
+            
             if (rows.length > 0) {
                 const columnMapping = {
                     'id': 'source_id',
@@ -31,8 +30,6 @@ class SourcesModel {
         } catch (error) {
             console.error('Error executing query:', error);
             return [];
-        } finally {
-            if (connection) connection.release();  // Release the connection back to the pool
         }
     }
 }
