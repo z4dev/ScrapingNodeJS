@@ -55,7 +55,7 @@
                     <% if (parseInt(item.is_published) === 1) { %>
                       <i class="fa fa-check disabled-checkmark"></i> <!-- Show checkmark if published -->
                     <% } else { %>
-                      <a href="#" class="share-telegram" data-id="<%= item.news_id %>">
+                      <a href="#" class="share-telegram" data-id="<%= item.news_id %>" data-url="<%=item.news_url%>"> 
                         <i class="fa fa-share"></i> <!-- Show share icon as a link -->
                       </a>
                     <% } %>
@@ -126,10 +126,20 @@
             $('.share-telegram').on('click', function(event) {
               event.preventDefault();
               
-              const newsId = $(this).data('id'); // Get the news ID from data-id attribute
-              const $icon = $(this).find('i'); // Find the icon within the clicked element
-              const $this = $(this); // Store the clicked element for later use
+              const newsId = $(this).data('id');
+              const url = $(this).data('url');
+              const $icon = $(this).find('i'); 
+              const $this = $(this);
+   // Extract the base domain
+let modifiedURL = new URL(url).origin;
 
+// Check if 'www' is missing and add it if necessary
+if (!modifiedURL.includes('www.')) {
+    const domain = modifiedURL.replace(/^https?:\/\//, ''); // Remove protocol
+    modifiedURL = `https://www.${domain}`;
+}
+
+            
               // Update the loading message to Telegram sharing
               $('#loadingMessage').text('النشر إلى تيليجرام....');
               
@@ -138,7 +148,7 @@
 
               // Make an AJAX POST request to share the news
               $.ajax({
-                url: `/share/telegram/${newsId}`,
+                url: `/share/telegram?id=${newsId}&url=${modifiedURL}`,
                 type: 'POST',
                 headers: {
                   'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')

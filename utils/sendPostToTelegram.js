@@ -1,9 +1,8 @@
 import mysql from 'mysql';
 import { Telegraf } from 'telegraf';
+import { SOURCES } from '../helpers/constants.js';
 
 // Configuration
-const TELEGRAM_BOT_TOKEN = '7358343640:AAHYDLwlEpPRPS3fQX1poSmG27S-M4NMwV8'; // Replace with your bot token
-const TELEGRAM_CHANNEL_ID = '@ziad_tech_news'; // Replace with your channel ID or username (with @)
 const DB_HOST = 'localhost'; // Database host
 const DB_USER = 'root'; // Database user
 const DB_PASSWORD = ''; // Database password
@@ -44,9 +43,13 @@ const updateNewsToPublished = (id) => {
 
 
 
-export default async (id) => {
+export default async (id , url) => {
     try {
-        // Fetch the news by ID
+        
+        const wantedTelegramBot = SOURCES.find(source => source.url === url);
+        console.log(wantedTelegramBot);
+        const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID } = wantedTelegramBot;
+        console.log(TELEGRAM_BOT_TOKEN , TELEGRAM_CHANNEL_ID);
         const news = await fetchNewsById(id);
         if (!news) {
             throw new Error(`News with ID ${id} not found.`);

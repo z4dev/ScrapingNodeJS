@@ -1,9 +1,7 @@
 export const URLS = {
     TECH_GATE :'https://www.aitnews.com',
     ARAB_HARDWARE :'https://www.arabhardware.net',
-    TECH_WD :'https://www.tech-wd.com',
 }
-
 
 export const SOURCES = [
     {
@@ -15,6 +13,8 @@ export const SOURCES = [
         articleUrl: 'a',
         date: '.date',
         image: 'img',
+        TELEGRAM_BOT_TOKEN : '7358343640:AAHYDLwlEpPRPS3fQX1poSmG27S-M4NMwV8',
+        TELEGRAM_CHANNEL_ID : '@ziad_tech_news',
         imageStyle: '.big-thumb-left-box-inner',
         keywords: '',
         source_id: 1
@@ -32,20 +32,9 @@ export const SOURCES = [
     metaViews: '.meta-views p', // Ensure this exists in your HTML
     metaTime: '.meta-time p', // Ensure this exists in your HTML
     keywords: '',
-    source_id: 2
+    source_id: 2,
+    TELEGRAM_BOT_TOKEN : '7358343640:AAHYDLwlEpPRPS3fQX1poSmG27S-M4NMwV8',
+    TELEGRAM_CHANNEL_ID : '@ziad_tech_news',
 }
-,
-    {
-        id: 3,
-        name: 'Tech WD',
-        url: URLS.TECH_WD,
-        selector: '.post-item, .tie-video',
-        title: 'a[aria-label]',
-        articleUrl: 'a',
-        date: '.date',
-        image: 'img',
-        imageStyle: '.big-thumb-left-box-inner',
-        keywords: '',
-        source_id: 3
-    }
+
 ]
