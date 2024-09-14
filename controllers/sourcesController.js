@@ -20,7 +20,6 @@ const sourcesController = {
             const { url } = req.query;
 
             if (!url) {
-                console.log('Scraping all sources...');
                 let totalNewsCount = 0;
                 for (const source of SOURCES) {
                     const data = await scrapeAndInsert(source.url);
@@ -29,7 +28,6 @@ const sourcesController = {
                 return res.json({ isFetching: totalNewsCount > 0, newsCount: totalNewsCount });
             }
 
-            console.log(`Starting scrape for URL: ${url}`);
 
             // Attempt to scrape and insert data
             const data = await scrapeAndInsert(url);
@@ -40,7 +38,6 @@ const sourcesController = {
                 return res.status(404).json({ error: 'No data found for the provided URL.' });
             }
 
-            console.log(`Successfully scraped data from URL: ${url}`);
             return res.json(data);
 
         } catch (error) {

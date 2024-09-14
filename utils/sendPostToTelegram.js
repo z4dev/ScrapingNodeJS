@@ -47,9 +47,7 @@ export default async (id , url) => {
     try {
         
         const wantedTelegramBot = SOURCES.find(source => source.url === url);
-        console.log(wantedTelegramBot);
         const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID } = wantedTelegramBot;
-        console.log(TELEGRAM_BOT_TOKEN , TELEGRAM_CHANNEL_ID);
         const news = await fetchNewsById(id);
         if (!news) {
             throw new Error(`News with ID ${id} not found.`);
@@ -75,7 +73,6 @@ export default async (id , url) => {
         }
 
         await updateNewsToPublished(id);
-        console.log(`Post with ID ${id} sent to Telegram.`);
         
         return true;
     } catch (error) {

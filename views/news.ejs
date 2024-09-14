@@ -95,7 +95,6 @@
                 url: '/sources/scrap',
                 type: 'GET',
                 success: function(response) {
-                  console.log('Response from server:', response); // Log the full response
                   $('#loadingIndicator').hide();
 
                   $button.prop('disabled', false).removeClass('disabled');
