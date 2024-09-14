@@ -33,8 +33,8 @@ export const SOURCES = [
     metaTime: '.meta-time p', // Ensure this exists in your HTML
     keywords: '',
     source_id: 2,
-    TELEGRAM_BOT_TOKEN : '7358343640:AAHYDLwlEpPRPS3fQX1poSmG27S-M4NMwV8',
-    TELEGRAM_CHANNEL_ID : '@ziad_tech_news',
+    TELEGRAM_BOT_TOKEN : '7547133192:AAEchdkHfgGScgQ4gzKHzcbPOSQKzlvXId0',
+    TELEGRAM_CHANNEL_ID : '@techNews0011',
 }
 
 ]
