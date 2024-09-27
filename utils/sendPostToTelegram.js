@@ -45,7 +45,7 @@ const updateNewsToPublished = (id) => {
 
 export default async (id , url) => {
     try {
-        
+        console.log(url);
         const wantedTelegramBot = SOURCES.find(source => source.url === url);
         const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID } = wantedTelegramBot;
         const news = await fetchNewsById(id);
@@ -55,6 +55,7 @@ export default async (id , url) => {
 
         // Initialize the Telegram bot
         const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
+
 
         // Send the image to the Telegram channel
         if (news.image) {

@@ -3,9 +3,13 @@ import * as cheerio from 'cheerio';
 import { queryWithRetry } from '../config/dbConfig.js';  // Import queryWithRetry function
 import { SOURCES } from '../helpers/constants.js'; 
 
+
+
 const scrapeAndInsert = async (url) => {
     try {
+        console.log(url);
         const sourceConfig = SOURCES.find(source => source.url === url);
+        console.log(sourceConfig);
         if (!sourceConfig) {
             throw new Error('No source configuration found for the provided URL');
         }
@@ -16,48 +20,65 @@ const scrapeAndInsert = async (url) => {
         const newsArray = [];
 
         // Function to process each element
-        const processElement = async (element) => {
-            let title;
-            if (url === SOURCES[0].url) {
-                title = $(element).find(sourceConfig.title).attr('aria-label').trim();
-            } else {
-                title = $(element).find(sourceConfig.title).text().trim();
-            }
+     // Function to process each element
+const processElement = async (element) => {
+    let title;
 
-            const articleUrl = $(element).find(sourceConfig.articleUrl).attr('href');
+    // Logic to handle SOURCES[0].url (existing logic)
+    if (url === SOURCES[0].url) {
+        title = $(element).find(sourceConfig.title).attr('aria-label').trim();
+    } 
+    // Logic for other sources
+    else {
+        title = $(element).find(sourceConfig.title).text().trim();
+        console.log(title);
+    }
 
-            // Attempt to retrieve the date, if not found, set it to the current date
-            let date = $(element).find(sourceConfig.date).text().trim();
-            if (!date) {
-                date = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });  // Default to current date
-            }
+    let articleUrl = $(element).find(sourceConfig.articleUrl).attr('href');
+    
+    if (articleUrl && articleUrl.startsWith('/')) {
+        articleUrl = `https://arabic.rt.com${articleUrl}`; 
+    }
 
-            let image = $(element).find(sourceConfig.image).attr('src') || $(element).find(sourceConfig.image).attr('data-src');
-            console.log(`Processing article: ${title}`);
+    // Attempt to retrieve the date, if not found, set it to the current date
+    let date = $(element).find(sourceConfig.date).text().trim();
+    if (!date) {
+        date = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });  // Default to current date
+    }
 
-            if (!image && sourceConfig.imageStyle) {
-                const divStyle = $(element).find(sourceConfig.imageStyle).attr('style');
-                const urlRegex = /url\(["']?(.*?)["']?\)/;
-                const match = divStyle ? divStyle.match(urlRegex) : null;
-                image = match ? match[1] : null;
-            }
+    // General image extraction logic (existing logic)
+    let image = $(element).find(sourceConfig.image).attr('src') || $(element).find(sourceConfig.image).attr('data-src');
 
-            // Query the database to check if the article already exists
-            const rows = await queryWithRetry('SELECT * FROM news_tbl WHERE url = ?', [articleUrl]);
-            if (rows.length > 0) {
-                console.log(`Article with URL ${articleUrl} already exists in the database.`);
-            } else {
-                // Add the new article to the newsArray
-                newsArray.push({
-                    title: title || "No title",
-                    date: date,  // Use either the scraped date or the default date
-                    image: image || "No image",
-                    url: articleUrl,
-                    keywords: '',  
-                    source_id: sourceConfig.source_id  
-                });
-            }
-        };
+
+    if (image && (image.startsWith('data:image/svg+xml') || image.includes('base64'))) {
+        image = $(element).find('a.post-thumb img').attr('data-srcset') || null;
+    }
+
+    
+    if (!image && sourceConfig.imageStyle) {
+        const divStyle = $(element).find(sourceConfig.imageStyle).attr('style');
+        const urlRegex = /url\(["']?(.*?)["']?\)/;
+        const match = divStyle ? divStyle.match(urlRegex) : null;
+        image = match ? match[1] : null;
+    }
+
+    // Query the database to check if the article already exists
+    const rows = await queryWithRetry('SELECT * FROM news_tbl WHERE url = ?', [articleUrl]);
+    if (rows.length > 0) {
+        console.log(`Article with URL ${articleUrl} already exists in the database.`);
+    } else {
+        // Add the new article to the newsArray
+        newsArray.push({
+            title: title || "No title",
+            date: date,  // Use either the scraped date or the default date
+            image: image || "No image",
+            url: articleUrl,
+            keywords: '',  
+            source_id: sourceConfig.source_id  
+        });
+    }
+};
+
         
         const elements = $(sourceConfig.selector).toArray();
 

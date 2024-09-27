@@ -49,7 +49,7 @@
                       <a href="#" role="button" title="صورة الخبر" data-toggle="modal" data-target="#myModal" data-image-url="<%= item.news_image %>">
                         <i class="fa fa-image fa-fw"></i>
                       </a>
-                      <a href="<%= item.news_url %>" target="_blank" title="رابط الخبر">
+                      <a href="<%= item.news_url%>" target="_blank" title="رابط الخبر">
                         <i class="fa fa-link fa-fw"></i>
                       </a>
                     <% if (parseInt(item.is_published) === 1) { %>
@@ -146,6 +146,19 @@ if (!modifiedURL.includes('www.')) {
               $('#loadingIndicator').show();
 
               // Make an AJAX POST request to share the news
+
+       if(modifiedURL == "https://www.arabic.rt.com"){
+        modifiedURL   = "https://arabic.rt.com/tags/mobile/";
+       }
+
+       if(modifiedURL == "https://www.raqamitv.com"){
+        modifiedURL   = "https://raqamitv.com/category/topics-and-devices/smartphones/topics-and-devices/smartphones/";
+       }
+
+
+       console.log(modifiedURL);
+
+
               $.ajax({
                 url: `/share/telegram?id=${newsId}&url=${modifiedURL}`,
                 type: 'POST',

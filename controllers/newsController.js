@@ -22,6 +22,7 @@ const newsController = {
 
     async share_telegram(req, res) {
         const {id,url} = req.query;
+        console.log(url);
         const posted = await sendPostToTelegram(id,url);
         if (posted) 
           return res.json({ success: true });
