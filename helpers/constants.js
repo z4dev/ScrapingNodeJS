@@ -27,7 +27,7 @@ const TELEGRAM_CHANNELS = {
 
 
     BOT_TOKEN_C : "7689902377:AAFS3hQo8_5whuh4NsHOpPdrR0figQ4cnZQ",
-    BOT_CHANNEL_NAME_C : '@tech001111'
+    BOT_CHANNEL_NAME_C : '@phones_vs'
 
 }
 

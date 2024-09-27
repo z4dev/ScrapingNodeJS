@@ -45,6 +45,7 @@
                     <td><%= item.news_title %></td>
                     <td><%= item.news_date %></td>
                     <td><%= item.source_name %></td>
+                    
                     <td>
                       <a href="#" role="button" title="صورة الخبر" data-toggle="modal" data-target="#myModal" data-image-url="<%= item.news_image %>">
                         <i class="fa fa-image fa-fw"></i>
@@ -151,7 +152,9 @@ if (!modifiedURL.includes('www.')) {
         modifiedURL   = "https://arabic.rt.com/tags/mobile/";
        }
 
+        
 
+       console.log(url);
        if(modifiedURL == "https://www.raqamitv.com"){
          if(url.includes("/comparison")){
           modifiedURL = "https://raqamitv.com/comparisons-list/";

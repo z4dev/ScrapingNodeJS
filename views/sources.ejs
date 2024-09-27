@@ -27,6 +27,8 @@
               <th>#</th>
               <th>الاسم</th>
               <th>الرابط</th>
+              <th>اسم البوت</th>
+              <th>اسم القناه</th>
               <th>عدد الأخبار</th>
               <th style="text-align: center;">جلب بيانات</th> <!-- New column for the scrape button -->
             </tr>
@@ -37,6 +39,8 @@
               <td><%= source.source_id %></td>
               <td><%= source.source_name %></td>
               <td><a target="_blank" href="<%= source.source_url %>"><%= source.source_url %></a></td>
+              <td><%= source.bot_name %></td>
+              <td><%= source.channel_name %></td>
               <td><%= source.news_count %></td>
               <td style="text-align: center;">
                 <button class="fa fa-reload fa-refresh btn-scraper" 
