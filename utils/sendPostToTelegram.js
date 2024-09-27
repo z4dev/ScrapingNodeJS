@@ -45,7 +45,6 @@ const updateNewsToPublished = (id) => {
 
 export default async (id , url) => {
     try {
-        console.log(url);
         const wantedTelegramBot = SOURCES.find(source => source.url === url);
         const { TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID } = wantedTelegramBot;
         const news = await fetchNewsById(id);

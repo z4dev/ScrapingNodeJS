@@ -151,12 +151,16 @@ if (!modifiedURL.includes('www.')) {
         modifiedURL   = "https://arabic.rt.com/tags/mobile/";
        }
 
+
        if(modifiedURL == "https://www.raqamitv.com"){
-        modifiedURL   = "https://raqamitv.com/category/topics-and-devices/smartphones/topics-and-devices/smartphones/";
+         if(url.includes("/comparison")){
+          modifiedURL = "https://raqamitv.com/comparisons-list/";
+         }
+         else {
+          modifiedURL = "https://raqamitv.com/category/topics-and-devices/smartphones/topics-and-devices/smartphones/"
+         }
        }
 
-
-       console.log(modifiedURL);
 
 
               $.ajax({

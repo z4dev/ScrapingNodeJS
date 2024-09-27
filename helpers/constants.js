@@ -7,7 +7,11 @@ export const URLS = {
 
     //mobiles (bot B)
     TR_ARABIC :"https://arabic.rt.com/tags/mobile/",
-    RAQAMI_TV : "https://raqamitv.com/category/topics-and-devices/smartphones/topics-and-devices/smartphones/"
+    RAQAMI_TV : "https://raqamitv.com/category/topics-and-devices/smartphones/topics-and-devices/smartphones/",
+
+    // compar (bot C)
+
+    RAQAMI_TV_COMPARISONS : "https://raqamitv.com/comparisons-list/"
 
 }
 
@@ -22,11 +26,8 @@ const TELEGRAM_CHANNELS = {
     BOT_CHANNEL_NAME_B : '@techNews0011',
 
 
-
-
-
-    
-
+    BOT_TOKEN_C : "7689902377:AAFS3hQo8_5whuh4NsHOpPdrR0figQ4cnZQ",
+    BOT_CHANNEL_NAME_C : '@tech001111'
 
 }
 
@@ -77,8 +78,8 @@ export const SOURCES = [
     image: 'figure.main-figure img',  // The image is in the <img> tag within the <figure>
     keywords: 'ul.main-article__tags li.tags__item a',  // Keywords are inside the <li> tags within the <ul>
     views: 'span.main-article__views-number',  // Extract the views number from this <span> tag
-    TELEGRAM_BOT_TOKEN: TELEGRAM_CHANNELS.BOT_TOKEN_B,  // Replace with your Telegram bot token or pull from environment variables
-    TELEGRAM_CHANNEL_ID: TELEGRAM_CHANNELS.BOT_CHANNEL_NAME_B,  // Replace with your Telegram channel ID
+    TELEGRAM_BOT_TOKEN: TELEGRAM_CHANNELS.BOT_TOKEN_C,  // Replace with your Telegram bot token or pull from environment variables
+    TELEGRAM_CHANNEL_ID: TELEGRAM_CHANNELS.BOT_CHANNEL_NAME_C,  // Replace with your Telegram channel ID
     source_id: 3  // The unique source ID
 },
 
@@ -97,7 +98,25 @@ export const SOURCES = [
     TELEGRAM_BOT_TOKEN: TELEGRAM_CHANNELS.BOT_TOKEN_B,  // Replace with your Telegram bot token or pull from environment variables
     TELEGRAM_CHANNEL_ID: TELEGRAM_CHANNELS.BOT_CHANNEL_NAME_B,  // Replace with your Telegram channel ID
     excerpt: 'p.post-excerpt',  // The excerpt/summary text is inside the <p> tag with class 'post-excerpt'
-    source_id: 4  // The unique source ID for this particular scraping source
+    source_id: 4  // The unique source ID for this particular scraping source,
+    ,
+    type : 'mobiles'
+}
+,
+{
+    id: 5,  
+    name: 'RaqamiTV Comparisons',  
+    url: URLS.RAQAMI_TV_COMPARISONS,  // Base URL of the website
+    selector: 'ul.aps-comps.clearfix li',  // Matches the individual post container inside the <ul> list
+    title: 'h2.aps-comp-list-title a',  // The title is inside the <h2> tag within <a>
+    articleUrl: 'h2.aps-comp-list-title a',  // The URL is inside the <a> tag
+    image: '.aps-comps-thumb img',  // The image is in the <img> tag within the <span> and `src` holds the image URL
+    keywords: null,  // No specific keywords in this structure
+    views: null,  // No views available in this structure
+    TELEGRAM_BOT_TOKEN: TELEGRAM_CHANNELS.BOT_TOKEN_C,  // Replace with your Telegram bot token or pull from environment variables
+    TELEGRAM_CHANNEL_ID: TELEGRAM_CHANNELS.BOT_CHANNEL_NAME_C,  // Replace with your Telegram channel ID
+    source_id: 5 ,
+    type : 'comparisons'
 }
 
 
