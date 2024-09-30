@@ -6,7 +6,8 @@ import { SOURCES } from '../helpers/constants.js';
 const sourcesController = {
 
     async sources_get(req, res) {
-        let sources = await sourcesModel.getSources();
+
+        let sources = await sourcesModel.getSources(req.query.id);
         res.render('sources', {
             layout: 'layouts/main-layout',
             route: 'sources',

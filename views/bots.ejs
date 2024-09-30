@@ -1,0 +1,99 @@
+<head>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+  </head>
+  
+  <div class="row">
+    <!-- Loading Indicator (Initially Hidden) -->
+    <div id="loadingIndicator" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:9999; background-color:white; padding:10px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.5);">
+      <i class="fa fa-spinner fa-spin"></i> <span id="loadingMessage">جاري جلب البيانات....</span>
+    </div>
+  
+    <!-- Success Alert -->
+    <div id="successAlert" style="display:none; position:fixed; top:20px; left:20px; z-index:9999; background-color:#28a745; color:white; padding:15px 20px; border-radius:5px; box-shadow:0px 0px 10px rgba(0,0,0,0.3);">
+      <i class="fa fa-check-circle"></i> <span id="successMessage">تم النشر إلى تيليجرام بنجاح!</span>
+    </div>
+  
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">جميع المصادر المتاحة</div>
+        <!-- /.panel-heading -->
+        <div class="panel-body">
+          
+          <% if (bots.length === 0) { %>
+            <!-- Show "جلب بيانات" button if no data -->
+            <div class="text-center">
+              <button id="fetchDataButton" class="btn btn-primary">
+                جلب بيانات
+              </button>
+            </div>
+          <% } else { %>
+            <!-- Show table only when there is data -->
+            <table class="table table-striped table-bordered table-hover">
+              <thead>
+                  <tr>
+                      <th>رقم البوت</th>
+                      <th>توكن البوت</th>
+                      <th>اليوزر نيم للبوت</th>
+                      <th>اسم البوت</th>
+                      <th>رقم القناه</th>
+                      <th>اسم القناه</th>
+                      <th> عدد المواقع التي تغذي البوت</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <% bots.forEach(item => { %>
+                  <tr class="odd gradeX" id="bots-row-<%= item.bots_id %>">
+                      <td><%= item.bot_id %></td>
+                      <td><%= item.bot_token %></td>
+                      <td><%= item.bot_username %></td>
+                      <td><%= item.bot_name %></td>
+                      <td><%= item.channel_Id %></td>
+                      <td><%= item.channel_name %></td>
+                      <td style="text-align: center;"><a href="/sources?id=<%=item.bot_id%>"><%= item.source_website %></a></td>
+                  </tr>
+                  <% }); %>
+              </tbody>
+            </table>
+          <% } %>
+  
+          <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+   
+          
+          <style>
+            .disabled-checkmark {
+              pointer-events: none;
+              cursor: auto;
+            }
+            .fa-check {
+              color: green !important;
+            }
+          </style>
+  
+     
+        </div>
+        <!-- /.panel-body -->
+      </div>
+      <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+  </div>
+  <!-- /.row -->
+  
+  <!-- Modal -->
+  <div id="myModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="myModalLabel">صورة الخبر</h4>
+        </div>
+        <div class="modal-body">
+          <img id="modalImage" src="" width="100%" />
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
